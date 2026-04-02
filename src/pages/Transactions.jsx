@@ -147,7 +147,7 @@ export function Transactions() {
     setCurrentPage(1);
   }, [filters.searchQuery, filters.selectedType, filters.selectedCategory]);
 
-  const { paginatedData, totalPages, totalResults } = useMemo(() => {
+  const { paginatedData, totalPages, totalResults, filteredTransactions } = useMemo(() => {
     let result = transactions.filter(tx => {
       const matchSearch = tx.title.toLowerCase().includes(filters.searchQuery.toLowerCase());
       const matchType = filters.selectedType === 'All' || tx.type === filters.selectedType;
@@ -169,12 +169,17 @@ export function Transactions() {
     const totalPages = Math.ceil(totalResults / itemsPerPage);
     const paginatedData = result.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    return { paginatedData, totalPages, totalResults };
+    return { paginatedData, totalPages, totalResults, filteredTransactions: result }; // Added filteredTransactions
   }, [transactions, filters, currentPage]);
 
   const handleExport = () => {
+    if (filteredTransactions.length === 0) {
+      toast.error('No transactions to export');
+      return;
+    }
+
     const headers = ['Date', 'Title', 'Category', 'Payment Method', 'Type', 'Amount'];
-    const csvData = filteredAndSorted.map(tx => [
+    const csvData = filteredTransactions.map(tx => [
       tx.date, `"${tx.title}"`, `"${tx.category}"`, `"${tx.paymentMethod}"`, tx.type, tx.amount
     ].join(','));
     const csvContent = [headers.join(','), ...csvData].join('\n');
